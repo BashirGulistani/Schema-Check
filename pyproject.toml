@@ -1,0 +1,24 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "driftfence"
+version = "0.1.0"
+description = "Schema drift detection for CSV/JSONL files (diff + risk scoring + HTML/JSON reports)."
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "DriftFence Contributors" }]
+keywords = ["schema", "drift", "csv", "jsonl", "data-quality", "etl", "ci"]
+classifiers = [
+  "Programming Language :: Python :: 3",
+  "License :: OSI Approved :: MIT License",
+  "Operating System :: OS Independent"
+]
+
+[project.scripts]
+driftfence = "driftfence.cli:main"
+
+[tool.setuptools.packages.find]
+where = ["src"]
