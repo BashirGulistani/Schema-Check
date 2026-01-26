@@ -51,7 +51,13 @@ def read_json_rows(path: str, *, max_rows: int = 5000) -> Iterator[Dict[str, Any
                 yield item
 
 
-
+def read_rows(path: str, *, max_rows: int = 5000) -> Iterator[Dict[str, Any]]:
+    fmt = sniff_format(path)
+    if fmt == "jsonl":
+        return read_jsonl_rows(path, max_rows=max_rows)
+    if fmt == "json":
+        return read_json_rows(path, max_rows=max_rows)
+    return read_csv_rows(path, max_rows=max_rows)
 
 
 
