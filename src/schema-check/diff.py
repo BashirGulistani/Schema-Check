@@ -16,3 +16,15 @@ class Change:
 
 
 
+@dataclass(frozen=True)
+class DriftReport:
+    changes: List[Change]
+    breaking: bool
+    risk_score: int  
+
+
+
+
+
+
+
