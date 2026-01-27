@@ -55,3 +55,13 @@ def _severity_for(change_kind: str, before: FieldSchema | None, after: FieldSche
 
 
 
+
+
+
+def _score_change(severity: str) -> int:
+    return {"low": 5, "medium": 15, "high": 35}.get(severity, 10)
+
+
+
+
+
