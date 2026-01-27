@@ -95,7 +95,52 @@ class DatasetSchema:
 
 
 
+def infer_schema(path: str, *, max_rows: int = 5000, max_examples: int = 3) -> DatasetSchema:
+    rows_iter = read_rows(path, max_rows=max_rows)
 
+    type_buckets: Dict[str, Set[str]] = {}
+    nullables: Dict[str, bool] = {}
+    examples: Dict[str, List[str]] = {}
+    present_counts: Dict[str, int] = {}
+    total = 0
+
+    for row in rows_iter:
+        total += 1
+        keys = set(row.keys())
+
+        for k in keys:
+            present_counts[k] = present_counts.get(k, 0) + 1
+
+        for k, v in row.items():
+            if k not in type_buckets:
+                type_buckets[k] = set()
+                nullables[k] = False
+                examples[k] = []
+
+            t = _infer_scalar_type(v)
+            type_buckets[k].add(t)
+            if t == "null":
+                nullables[k] = True
+
+            if len(examples[k]) < max_examples and not _is_null(v):
+                examples[k].append(_as_str(v)[:80])
+
+    from .io import sniff_format
+    fmt = sniff_format(path)
+
+    fields: Dict[str, FieldSchema] = {}
+    for k in sorted(type_buckets.keys()):
+        merged = _merge_types(type_buckets[k])
+        presence = (present_counts.get(k, 0) / total) if total else 0.0
+        fields[k] = FieldSchema(
+            name=k,
+            type=merged,
+            nullable=bool(nullables.get(k, False)),
+            examples=examples.get(k, []),
+            presence=presence,
+        )
+
+    return DatasetSchema(format=fmt, fields=fields, sampled_rows=total)
 
 
 
