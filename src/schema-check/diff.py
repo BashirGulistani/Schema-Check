@@ -61,7 +61,51 @@ def _severity_for(change_kind: str, before: FieldSchema | None, after: FieldSche
 def _score_change(severity: str) -> int:
     return {"low": 5, "medium": 15, "high": 35}.get(severity, 10)
 
+def diff_schemas(before: DatasetSchema, after: DatasetSchema) -> DriftReport:
+    changes: List[Change] = []
 
+    b_fields = before.fields
+    a_fields = after.fields
+
+    b_set = set(b_fields.keys())
+    a_set = set(a_fields.keys())
+
+    for f in sorted(a_set - b_set):
+        sev, note = _severity_for("added", None, a_fields[f])
+        changes.append(Change("added", f, None, a_fields[f].type, sev, note))
+
+    for f in sorted(b_set - a_set):
+        sev, note = _severity_for("removed", b_fields[f], None)
+        changes.append(Change("removed", f, b_fields[f].type, None, sev, note))
+
+    for f in sorted(b_set & a_set):
+        bf = b_fields[f]
+        af = a_fields[f]
+
+        if bf.type != af.type:
+            sev, note = _severity_for("type_changed", bf, af)
+            changes.append(Change("type_changed", f, bf.type, af.type, sev, note))
+
+        if bf.nullable != af.nullable:
+            sev, note = _severity_for("nullability_changed", bf, af)
+            changes.append(Change("nullability_changed", f, str(bf.nullable), str(af.nullable), sev, note))
+
+        if abs(bf.presence - af.presence) >= 0.2: 
+            sev, note = _severity_for("presence_changed", bf, af)
+            changes.append(Change(
+                "presence_changed",
+                f,
+                f"{bf.presence:.2f}",
+                f"{af.presence:.2f}",
+                sev,
+                note
+            ))
+
+    score = sum(_score_change(c.severity) for c in changes)
+    score = min(100, score)
+
+    breaking = any(c.severity == "high" or c.kind == "removed" for c in changes)
+    return DriftReport(changes=changes, breaking=breaking, risk_score=score)
 
 
 
