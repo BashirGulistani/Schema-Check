@@ -13,6 +13,14 @@ _FLOAT_RE = re.compile(r"^[+-]?\d+(\.\d+)?([eE][+-]?\d+)?$")
 
 
 
+def _is_null(v: Any) -> bool:
+    if v is None:
+        return True
+    if isinstance(v, str):
+        s = v.strip()
+        return s == "" or s.lower() in {"null", "none", "na", "n/a"}
+    return False
+
 
 
 
