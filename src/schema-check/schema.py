@@ -55,3 +55,47 @@ def _infer_scalar_type(v: Any) -> str:
 
 
 
+
+def _merge_types(types: Set[str]) -> str:
+    t = set(types)
+    t.discard("null")
+    if not t:
+        return "null"
+    if "object" in t:
+        return "object"
+    if "array" in t:
+        return "array"
+    if "string" in t:
+        return "string"
+    if "float" in t and "int" in t:
+        return "float"
+    if "float" in t:
+        return "float"
+    if "int" in t:
+        return "int"
+    if "bool" in t:
+        return "bool"
+    return "string"
+
+
+@dataclass(frozen=True)
+class FieldSchema:
+    name: str
+    type: str
+    nullable: bool
+    examples: List[str] = field(default_factory=list)
+    presence: float = 1.0
+
+
+@dataclass(frozen=True)
+class DatasetSchema:
+    format: str
+    fields: Dict[str, FieldSchema]
+    sampled_rows: int
+
+
+
+
+
+
+
