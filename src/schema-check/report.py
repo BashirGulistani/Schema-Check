@@ -18,3 +18,25 @@ def write_json(path: str, payload: dict) -> None:
 
 
 
+
+def to_payload(before: DatasetSchema, after: DatasetSchema, report: DriftReport) -> dict:
+    def pack_schema(s: DatasetSchema) -> dict:
+        return {
+            "format": s.format,
+            "sampled_rows": s.sampled_rows,
+            "fields": {
+                k: {
+                    "type": f.type,
+                    "nullable": f.nullable,
+                    "presence": round(f.presence, 4),
+                    "examples": f.examples,
+                }
+                for k, f in s.fields.items()
+            }
+        }
+
+
+
+
+
+
