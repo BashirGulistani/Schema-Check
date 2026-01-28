@@ -27,6 +27,26 @@ def main() -> None:
 
 
 
+    before_schema = infer_schema(args.before, max_rows=args.max_rows)
+    after_schema = infer_schema(args.after, max_rows=args.max_rows)
+
+    report = diff_schemas(before_schema, after_schema)
+    payload = to_payload(before_schema, after_schema, report)
+
+    out = Path(args.out_dir)
+    out.mkdir(parents=True, exist_ok=True)
+
+    write_json(str(out / "drift_report.json"), payload)
+    write_html(str(out / "report.html"), payload)
+
+    print(f"Wrote: {out / 'drift_report.json'}")
+    print(f"Wrote: {out / 'report.html'}")
+    print(f"Breaking: {report.breaking} | Risk: {report.risk_score}/100 | Changes: {len(report.changes)}")
+
+    if args.fail_on_breaking and report.breaking:
+        sys.exit(2)
+    if args.fail_risk is not None and report.risk_score >= args.fail_risk:
+        sys.exit(3)
 
 
 
